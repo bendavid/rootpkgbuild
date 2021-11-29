@@ -5,9 +5,9 @@
 # Contributor: Sebastian Voecking < voeck at web dot de >
 
 pkgbase=root
-pkgname=('root' 'root-cuda')
-pkgver=6.24.06
-pkgrel=8
+pkgname=('root')
+pkgver=v6.23.01.RF.binSampling.r3517.g328244e05f
+pkgrel=1
 pkgdesc='C++ data analysis framework and interpreter from CERN'
 arch=('x86_64')
 url='https://root.cern'
@@ -18,8 +18,6 @@ makedepends=(
     'chromium'
     'cfitsio'
     'cmake'
-    'cuda'
-    'cudnn'
     'gcc-fortran'
     'git'
     'go'
@@ -87,27 +85,30 @@ optdepends=(
     'z3: Suuport the Z3 theorem prover'
 )
 source=(
-    "https://root.cern.ch/download/root_v${pkgver}.source.tar.gz"
+#     "https://root.cern.ch/download/root_v${pkgver}.source.tar.gz"
+#     "https://github.com/bendavid/root/tarball/perfopt3"
+    "git+https://github.com/bendavid/root.git#branch=perfopt3"
     'ROOFIT_LICENSE'
     'root.xml'
     'root.pc.tpl'
     'settings.cmake'
-    'settings-cuda.cmake'
     'jupyter_notebook_config.py'
-    'nbman-for-arch.patch'
-    '8351.patch'
+#     'nbman-for-arch.patch'
     'thisroot.fail'
 )
-sha512sums=('356d6287df2900de9e831347d9513f444bf7cbd29c39fbb5841051ae877dac1e22dc255c64166cd3925b82aac860ae67ef6ce171732c16fd23d7919a47e7cb5a'
+sha512sums=('SKIP'
             'af8f178fc9df66997d5495b271e38adcd1636aab4c8fc994c6600c2496127829d831250d73d3fc229b02dfe49b9867d0be979beacb959f2f3a05351b8118a4a6'
             '1fe6f4aa09d583d33f27cc766f4935510bb7ab6bbb8d4700baa1aaab92ea6c876500b67da1e4f6e0b510aa5616e4e193b860264b86925de85f2d9f558d75d5dc'
             '3c81d255a17b902ffac0187af1752847036137e16641a88b17eef0d9c944e6f0d3c954bc93307d6270603f43f6c23f2e04f98dc7a68f9d076dbaa8006a2527d6'
             '4ef971eac7520d27fa88848c8d477243b1fc372e42122e3928092dc68ed2eea19ad0dea6203cf77b61406eea1da7a260a39d2bc116a19e59de99e99a51fb6bf5'
-            '99cfdd351f1ec1eaca84fffefa82d1f9f9af691e5d5dd8955b047aac324b8cb0ba2b657074d8e0a707e44f024d2f465a9a410bf7c729f12c0d84fcd17c63ca01'
             '1c905ee7a3f8f5f3f567d957f9be6b503a8631565d4d9b9bfea5e496ef86865c5a8be1a1f8c7842754029879cf0afd2465249f532a116cc43660aa2e460ae682'
-            '12814f50b7016bd86d3f91e0e31c052783a0c0fa72b7d6a072d3ae6f86c2437323d585e531235377ebbfdd9cb76abd7da84d9631de821151547f1d4b13417e69'
-            '870740fbbd678056dd71b275c5d96f9b0db503ca8e0e9e84f784c3115aae66bb28a1eb531f665c1c8306a52686e5ce484ef65b3194bef6cb0d631664ccb1e3f9'
+#             '12814f50b7016bd86d3f91e0e31c052783a0c0fa72b7d6a072d3ae6f86c2437323d585e531235377ebbfdd9cb76abd7da84d9631de821151547f1d4b13417e69'
             '3b9e382480b28f60af0b096ac9a42e6ba611b899717988bdebffd5aeabab054e37a28a7421f4a0f39198638c31f56a657a8a9ccc3db54a87daf50d43d35b1ca9')
+
+pkgver() {
+  cd "$pkgbase"
+  git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
 
 get_pyver () {
     python -c 'import sys; print(str(sys.version_info[0]) + "." + str(sys.version_info[1]))'
@@ -120,7 +121,7 @@ prepare() {
         src="${src##*/}"
         [[ $src = *.patch ]] || continue
         echo "  -> Applying patch $src..."
-        patch -Np1 -i "../$src" -d "${srcdir}/${pkgbase}-${pkgver}"
+        patch -Np1 -i "../$src" -d "${srcdir}/${pkgbase}"
     done
 
     # specify some custom flags
@@ -161,7 +162,7 @@ prepare() {
               75-real 75-virtual 80-real 80-virtual
               86-real 86-virtual"'
 
-    cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}-cuda"
+    #cp -r "${pkgbase}-${pkgver}" "${pkgbase}-${pkgver}-cuda"
 }
 
 build() {
@@ -171,20 +172,7 @@ build() {
 
     cmake -C "${srcdir}/settings.cmake" \
         ${CUSTOM_CMAKE_FLAGS} \
-        "${srcdir}/${pkgbase}-${pkgver}"
-    make
-
-    ## ROOT with CUDA
-    mkdir -p "${srcdir}/build-cuda"
-    cd "${srcdir}/build-cuda"
-
-    CC=/usr/bin/gcc \
-    CXX=/usr/bin/g++ \
-    FC=/usr/bin/f95 \
-    cmake -C "${srcdir}/settings-cuda.cmake" \
-        ${CUSTOM_CMAKE_FLAGS} \
-        ${CUSTOM_CUDA_ARCH} \
-        "${srcdir}/${pkgbase}-${pkgver}-cuda"
+        "${srcdir}/${pkgbase}"
     make
 }
 
@@ -224,9 +212,9 @@ _package() {
         "${pkgdir}/usr/lib/python${_pyver}"
 
     # icon, shortcut and mime
-    install -Dm644 "${srcdir}/${pkgbase}-${pkgver}/icons/Root6Icon.png" \
+    install -Dm644 "${srcdir}/${pkgbase}/icons/Root6Icon.png" \
         "${pkgdir}/usr/share/icons/hicolor/48x48/apps/root.png"
-    install -Dm644 "${srcdir}/${pkgbase}-${pkgver}/etc/root.desktop" \
+    install -Dm644 "${srcdir}/${pkgbase}/etc/root.desktop" \
         "${pkgdir}/usr/share/applications/root.desktop"
     echo 'Icon=root.png' >> "${pkgdir}/usr/share/applications/root.desktop"
     install -Dm644 "${srcdir}/root.xml" \
@@ -292,13 +280,4 @@ _package() {
 package_root() {
     optdepends+=('gcc-fortran: Enable the Fortran components of ROOT')
     _package build
-}
-
-package_root-cuda() {
-    pkgdesc='C++ data analysis framework and interpreter from CERN with GPU (CUDA) features enabled'
-    provides=('root')
-    conflicts=('root')
-    depends+=('cuda' 'cudnn')
-    optdepends+=('gcc-fortran: Enable the Fortran components of ROOT')
-    _package build-cuda
 }
