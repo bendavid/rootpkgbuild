@@ -5,8 +5,8 @@
 # Contributor: Sebastian Voecking < voeck at web dot de >
 
 pkgbase=root
-pkgname=('root')
-pkgver=v6.23.01.RF.binSampling.r3517.g328244e05f
+pkgname=('root-git')
+pkgver=328244e05f
 pkgrel=1
 pkgdesc='C++ data analysis framework and interpreter from CERN'
 arch=('x86_64')
@@ -107,7 +107,7 @@ sha512sums=('SKIP'
 
 pkgver() {
   cd "$pkgbase"
-  git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+  git rev-parse --short HEAD
 }
 
 get_pyver () {
@@ -277,7 +277,7 @@ _package() {
         "${pkgdir}/etc/root/system.rootrc"
 }
 
-package_root() {
+package_root-git() {
     optdepends+=('gcc-fortran: Enable the Fortran components of ROOT')
     _package build
 }
