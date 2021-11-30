@@ -199,7 +199,7 @@ _package() {
     local _pyver=$(get_pyver)
     local _pydir="${pkgdir}/usr/lib/python${_pyver}/site-packages"
     install -d "${_pydir}"
-    find "${pkgdir}/usr/lib/root" -maxdepth 1 -mindepth 1 \( -iname '*py*' -or -name '*Js*' -or -name 'ROOT' \) \
+    find "${pkgdir}/usr/lib/root" -maxdepth 1 -mindepth 1 \( -iname '*py*' -or -name '*Js*' -or -name 'ROOT' -or -name 'DistRDF' \) \
             ! \( -name '*EGPythia8*' -or -iname '*.rootmap' -or -iname '*.pcm' \) -print0 | while read -rd $'\0' _lib; do
         _base=$(basename "${_lib}")
         ln -sf "/usr/lib/root/${_base}" "${pkgdir}/usr/lib/python${_pyver}/site-packages/${_base}"
